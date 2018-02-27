@@ -1,0 +1,12 @@
+## backup configuration file
+
+## -----------------------
+## Restrictions
+## [+3]c means more than 3 byte
+## [-3]c means less than 3 byte
+# It's better to set file/dir size to bytes wit suffix `c`
+
+[+10]c *.txt ./target
+##[-300]c *.txt ./target
+##[=400]c *.txt ./target
+##[=500]c *.txt ./target
