@@ -6,7 +6,10 @@
 ## [-3]c means less than 3 byte
 # It's better to set file/dir size to bytes wit suffix `c`
 
-[+11]c *.txt ./target
-##[-300]c *.txt ./target
-##[=400]c *.txt ./target
-##[=500]c *.txt ./target
+[=2]c *.byte ./targetA
+[+10000]c *.kb ./targetA
+
+[=503]c *.parrots ./targetB
+[+900]c *.Mb ./targetB
+
+[-100]c *.parrots ./targetB/targetD

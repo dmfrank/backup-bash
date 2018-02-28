@@ -11,7 +11,7 @@ function run {
 		# goto backup directory
 		mkdir -p $BKP_DIR
 	fi
-	cat $CONFIG | while IFS='' read -r line; do 
+	cat $CONFIG | while IFS='' read -r line || [[ -n "$line" ]]; do 
 		# Check whether satisfy line to pattern or not
 		# skip commented lines
 		[[ "$line" =~ ^#.*$ ]] || [[ -z "$line" ]] && continue
@@ -23,7 +23,7 @@ function run {
 					local litera="${o: ${#o} - 1}"
 					local signSz="${o: 1: ${#o} - 3}"
 					local prefix="${o: 1: 1}"
-					local numSz="${signSz: 2: ${#signSz} - 3}"
+					local numSz="${signSz: 1: ${#signSz}}"
 				fi
 			fi
 			# fetch file mask
@@ -44,22 +44,17 @@ function run {
 			local filepath="${f: 1}"
 			# fetching filesize 
 			fsize=$(wc -c < "$f")
-			#echo $fsize
+
 			# verify on existing dir in $BKP_DIR
 			if [[ ! -d "$(dirname "$BKP_DIR$filepath")" ]]; then
 				mkdir -p "$(dirname "$BKP_DIR$filepath")"
 			fi
 
-			# verify on existing file in $BKP_DIR
-			if [[ ! -f "$BKP_DIR$filepath" ]]; then
-				cp "$f" "$BKP_DIR$filepath"
-			fi
-
 			local matched=false
 		
-			#echo $prefix
 			case $prefix in
 				-)
+					echo "$fsize" "$numSz"
 					if [[ "$fsize" -lt "$numSz" ]]; then
 						matched=true							
 					fi
@@ -76,17 +71,39 @@ function run {
 					;;
 			esac
 
+
+
 			if [[ "$matched" = true ]]; then
-				HUNKS=$(diff "$f" "$BKP_DIR$filepath") 
-				if [ "$HUNKS" != "" ]; then
-					echo $HUNKS > "$BKP_DIR$filepath".$(date +%s).patch
+				# verify on existing file in $BKP_DIR
+				if [[ ! -f "$BKP_DIR$filepath" ]]; then
+					cp "$f" "$BKP_DIR$filepath"
 				fi
+
+				# check if patches exists
+				for p in `ls $BKP_DIR$filepath.*.patch 2>/dev/null| sort -V`; do
+					if [[ ! -f "$BKP_DIR$filepath.patched" ]]; then
+						patch --output=$BKP_DIR$filepath.patched $BKP_DIR$filepath $p &>/dev/null
+					else
+						patch $BKP_DIR$filepath.patched $p &>/dev/null
+					fi
+				done;
+
+				if [[ ! -f $BKP_DIR$filepath.patched ]]; then
+					if ! diff -q "$BKP_DIR$filepath" "$f" &>/dev/null; then
+						diff "$BKP_DIR$filepath" "$f"> "$BKP_DIR$filepath".$(date +%s).patch
+					fi
+				else 
+					if ! diff -q $BKP_DIR$filepath.patched "$f" &>/dev/null; then
+						diff "$BKP_DIR$filepath".patched "$f"> "$BKP_DIR$filepath".$(date +%s).patch
+					fi
+					rm "$BKP_DIR$filepath.patched"				
+				fi	
 			fi
+			matched=false
 		done
-		#unset IFS; set +f
 	done
-	echo "#### Done ####"
 }
+
 
 while true; do
 	# tick for execution
