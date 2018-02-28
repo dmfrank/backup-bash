@@ -54,7 +54,6 @@ function run {
 		
 			case $prefix in
 				-)
-					echo "$fsize" "$numSz"
 					if [[ "$fsize" -lt "$numSz" ]]; then
 						matched=true							
 					fi
@@ -88,12 +87,12 @@ function run {
 					fi
 				done;
 
-				if [[ ! -f $BKP_DIR$filepath.patched ]]; then
+				if [[ ! -f "$BKP_DIR$filepath".patched ]]; then
 					if ! diff -q "$BKP_DIR$filepath" "$f" &>/dev/null; then
 						diff "$BKP_DIR$filepath" "$f"> "$BKP_DIR$filepath".$(date +%s).patch
 					fi
 				else 
-					if ! diff -q $BKP_DIR$filepath.patched "$f" &>/dev/null; then
+					if ! diff -q "$BKP_DIR$filepath".patched "$f" &>/dev/null; then
 						diff "$BKP_DIR$filepath".patched "$f"> "$BKP_DIR$filepath".$(date +%s).patch
 					fi
 					rm "$BKP_DIR$filepath.patched"				
@@ -103,7 +102,6 @@ function run {
 		done
 	done
 }
-
 
 while true; do
 	# tick for execution
