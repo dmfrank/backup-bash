@@ -1,0 +1,26 @@
+#!/bin/bash
+
+function run {
+    # echo $FILE $UNIXTIME
+    local prev
+    for f in `ls $FILENAME.*.patch 2>/dev/null| sort -V`; do
+        timestamp=$( echo $f | cut -d. -f3)
+        if [ $timestamp -le $UNIXTIME ]; then
+            echo $timestamp
+            if [[ ! -f $FILENAME.restored ]]; then
+			    patch --output=$FILENAME.restored $FILENAME $f &>/dev/null
+            else
+                patch $FILENAME.restored $f &>/dev/null
+            fi        
+        else
+            continue
+        fi
+		echo $f 
+    done
+    diff $FILENAME $FILENAME.restored
+}
+
+FILENAME=$1
+UNIXTIME=$2
+
+run
